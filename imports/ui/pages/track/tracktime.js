@@ -194,9 +194,20 @@ Template.tracktime.events({
     if (hourIncludesColon) {
       try {
         let hoursSplit = hours.split(':')
-        let dateEnd = dayjs.utc(date.setHours(hoursSplit[0], hoursSplit[1])).toDate()
-        let dateDiff = dateEnd.diff(date, 'h', true)
-        hours = dateDiff
+		let hoursBegin = date.getHours()
+		let minutesBegin = date.getMinutes()
+		let hoursEnd = parseFloat(hoursSplit[0])
+		let minutesEnd = parseFloat(hoursSplit[1])
+		let hoursDiff = hoursEnd - hoursBegin
+		let minutesDiff = minutesEnd - minutesBegin
+		if (minutesDiff < 0) {
+			minutesDiff += 60
+			hoursDiff--
+		}
+		while (hoursDiff < 0) {
+			hoursDiff += 24
+		}
+		hours = hoursDiff + minutesDiff / 60
       } catch (exception) {
         showToast(t('notifications.check_time_input'))
         return
