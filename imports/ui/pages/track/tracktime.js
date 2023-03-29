@@ -164,12 +164,15 @@ Template.tracktime.events({
       showToast(t('notifications.enter_time'))
       return
     }
-    try {
-      hours = hours.replace(',', '.')
-      templateInstance.math.eval(hours)
-    } catch (exception) {
-      showToast(t('notifications.check_time_input'))
-      return
+    let hourIncludesColon = hours.includes(':');
+    if (!hourIncludesColon) {
+      try {
+        hours = hours.replace(',', '.')
+        templateInstance.math.eval(hours)
+      } catch (exception) {
+        showToast(t('notifications.check_time_input'))
+        return
+      }
     }
     const projectId = templateInstance.projectId.get()
     const task = templateInstance.$('.js-tasksearch-input').val()
@@ -187,13 +190,26 @@ Template.tracktime.events({
         return
       }
     }
-    hours = templateInstance.math.eval(hours)
+    
+    if (hourIncludesColon) {
+      try {
+        let hoursSplit = hours.split(':')
+        let dateEnd = dayjs.utc(date.setHours(hoursSplit[0], hoursSplit[1])).toDate()
+        let dateDiff = dateEnd.diff(date, 'h', true)
+        hours = dateDiff
+      } catch (exception) {
+        showToast(t('notifications.check_time_input'))
+        return
+      }
+    } else {
+      hours = templateInstance.math.eval(hours)
 
-    if (getUserSetting('timeunit') === 'd') {
-      hours *= getUserSetting('hoursToDays')
-    }
-    if (getUserSetting('timeunit') === 'm') {
-      hours /= 60
+      if (getUserSetting('timeunit') === 'd') {
+        hours *= getUserSetting('hoursToDays')
+      }
+      if (getUserSetting('timeunit') === 'm') {
+        hours /= 60
+      }
     }
     templateInstance.$('.js-save').text(t('navigation.saving'))
     templateInstance.$('.js-save').prop('disabled', true)
